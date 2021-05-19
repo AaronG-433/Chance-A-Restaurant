@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import React from 'react';
 
@@ -7,25 +6,20 @@ function App()
    return (
       <div className="App">
          <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
             <p>
-               Edit <code>src/App.js</code> and save to reload.
+               Chance A Restaurant!
             </p>
-            <p>Hello</p>
-            <a
-               className="App-link"
-               href="https://reactjs.org"
-               target="_blank"
-               rel="noopener noreferrer"
-            >
-               Learn React
-            </a>
-            <JSONData />
          </header>
+         <div className = "App-body">
+            <JSONData />
+            <UserData />
+         </div>
       </div>
    );
 }
 
+
+// Create a class to find and store JSON data for potential restaurants
 class JSONData extends React.Component
 {
    constructor(props)
@@ -38,22 +32,24 @@ class JSONData extends React.Component
 
    componentDidMount()
    {
+      //// TODO: move this into a URL creator that takes user input
       var placeSearchURL = 'https://cors-anywhere-chance.herokuapp.com/https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 
          'key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
          '&location=29.632073906038194,-82.3305081265896&radius=2000' + 
          '&type=restaurant&keyword=hispanic';
-      
-      FetchPlaceSearchJSON(placeSearchURL).then((placeIDs) => {
-         console.log("placeIDs = " + placeIDs.length);
-         this.setState({searchPlaceIDs: placeIDs});
-      })
-      .catch(e => console.log(e));
+
+      //// TODO: move this into a function that updates the map when user confirms input
+      // FetchPlaceSearchJSON(placeSearchURL).then((placeIDs) => {
+      //    console.log("placeIDs = " + placeIDs.length);
+      //    this.setState({searchPlaceIDs: placeIDs});
+      // })
+      // .catch(e => console.log(e));
    }
 
    render()
    {
       return(
-         <ul>
+         <ul id = "placeID">
             {this.state.searchPlaceIDs.map(list => (<li>{list}</li>) )}
          </ul>
       );
@@ -86,6 +82,48 @@ function ParsePlaceSearchURLJSONForPlaceID(resultJson)
    resultJson.map(place => placeIDs.push(place.place_id));
 
    return placeIDs
+}
+
+
+// Store user location and inputs to use for API calls
+class UserData extends React.Component
+{
+   constructor(props)
+   {
+      super(props);
+      this.state = {
+         latitude: 0.0,
+         longitude: 0.0,
+         searchRange: 1000,
+         searchKeywords: '',
+      }
+   }
+
+   componentDidMount()
+   {
+      //// TODO: move this to user input and run when query made
+      navigator.geolocation.getCurrentPosition( position => {
+         if (!position.error)
+         {
+            this.setState({
+               latitude: position.coords.latitude,
+               longitude: position.coords.longitude
+            })
+         }
+      })
+   }
+
+   render()
+   {
+      return(
+         <ul id = "userData">
+            <li>Latitude = {this.state.latitude}</li>
+            <li>Longitude = {this.state.longitude}</li>
+            <li>Range = {this.state.searchRange}</li>
+            <li>Keywords = {this.state.searchKeywords}</li>
+         </ul>
+      );
+   }
 }
 
 export default App;
