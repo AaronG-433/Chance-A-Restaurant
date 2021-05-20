@@ -1,5 +1,6 @@
 import './App.css';
 import React from 'react';
+import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
 
 function App()
 {
@@ -11,8 +12,6 @@ function App()
             </p>
          </header>
          <div className = "App-body">
-            <JSONData />
-            <UserData />
          </div>
       </div>
    );
@@ -126,4 +125,46 @@ class UserData extends React.Component
    }
 }
 
-export default App;
+
+
+
+//// TODO: User this Maps demo to import and display a Google Map
+const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
+
+class SimpleMap extends React.Component
+{
+   constructor()
+   {
+      super();
+      this.state = {name: "React"};
+   }
+
+   render()
+   {
+      return(
+         <div>
+            <Map
+               google = {this.props.google}
+               zoom={14}
+               style={{height: '100%', width: '100%'}}
+               initialCenter={{
+                  lat: 23.456,
+                  lng: -82.33
+               }}
+            >
+               <Marker
+                  onClick = {this.onMarkerClick}
+                  name = {'My Marker'}
+               />
+            </Map>
+         </div>
+      );
+   }
+}
+
+//// TEMP
+//export default SimpleMap;
+
+export default GoogleApiWrapper({
+   apiKey: apiKey
+})(SimpleMap);
