@@ -12,6 +12,7 @@ function App()
             </p>
          </header>
          <div className = "App-body">
+            <UserData />
          </div>
       </div>
    );
@@ -101,14 +102,16 @@ class UserData extends React.Component
    componentDidMount()
    {
       //// TODO: move this to user input and run when query made
-      navigator.geolocation.getCurrentPosition( position => {
-         if (!position.error)
-         {
-            this.setState({
-               latitude: position.coords.latitude,
-               longitude: position.coords.longitude
-            })
-         }
+      GetUserPosition().then((position) => {
+         let locationData = [position.coords.latitude, position.coords.longitude];
+         console.log(locationData[0] + ', ' + locationData[1]);
+         this.setState({
+            latitude: locationData[0],
+            longitude: locationData[1]
+         })
+      })
+      .catch((err) => {
+         console.error(err.message);
       })
    }
 
@@ -125,12 +128,30 @@ class UserData extends React.Component
    }
 }
 
+let GetUserPosition = (options) => {
+   return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+   })
+}
 
+function GetUserLocation()
+{
+   console.log('In GetUserLocation');
+   navigator.geolocation.getCurrentPosition(position =>{
+      const locationData =  [position.coords.latitude, position.coords.longitude];
+      console.log(locationData[0] + ', ' + locationData[1]);
+      return locationData;
+   });
+   console.log('Leaving GetUserLocation');
+}
 
 
 //// TODO: User this Maps demo to import and display a Google Map
+
+//// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
 
+//https://www.pluralsight.com/guides/how-to-use-geolocation-call-in-reactjs
 class SimpleMap extends React.Component
 {
    constructor()
@@ -163,8 +184,8 @@ class SimpleMap extends React.Component
 }
 
 //// TEMP
-//export default SimpleMap;
+export default App;
 
-export default GoogleApiWrapper({
-   apiKey: apiKey
-})(SimpleMap);
+// export default GoogleApiWrapper({
+//    apiKey: apiKey
+// })(SimpleMap);
