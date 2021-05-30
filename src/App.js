@@ -30,39 +30,56 @@ class InputComponents extends React.Component
    {
       super(props);
       this.state = {
-         radius: 0,
+         radius: 5,
          keywords: '',
-         openNow: false
+         openNow: true
       };
+
+      this.handleInputChange = this.handleInputChange.bind(this);
    }
-
-
-   handleSubmit(event) 
+   
+   handleInputChange(event)
    {
-      alert('Data was submitted: ' + this.state.radius);
+      // Load data depending on if textbox or checkbox
+      const target = event.target;
+      const value = target.type === 'checkbox' ? target.checked : target.value;
+      const name = target.name;
+
+      this.setState({ [name]: value });
    }
+
+   //// TODO: limit radius to only numbers between 0 - 100
    render()
    {
       return(
-         <div className = 'Input-compnents'>
-            <form>
-               <label>
-                  Search radius in miles:
-                  <input type='text' id='radius' placeholder='Ex: 5'/>
-               </label>
-               <br />
-               <label>
-                  Restaurant type:
-                  <input type='text' id='keywords' name='' placeholder='Ex: hispanic' />
-               </label>
-               <br />
-               <label>
-                  Show only open restaurants:
-                  <input type='checkbox' id='openNow' />
-               </label>
-               <br />
-               <button onClick={() => {alert('Hi')}}>CHANCE!!!</button>
-            </form>
+         <div>
+            <div className = 'Input-Components'>
+               <form>
+                  <label>
+                     Search radius in miles:
+                     <input name='radius' type='text' placeholder='Ex: 5'
+                        value={this.state.radius} onChange={this.handleInputChange}
+                     />
+                  </label>
+                  <br />
+
+                  <label>
+                     Restaurant type:
+                     <input name='keywords' type='text' placeholder='Ex: hispanic'
+                        value={this.state.keywords} onChange={this.handleInputChange}
+                     />
+                  </label>
+                  <br />
+
+                  <label>
+                     Show only open restaurants:
+                     <input name='openNow' type='checkbox'
+                        value={this.state.openNow} checked='checked' onChange={this.handleInputChange}/>
+                  </label>
+                  <br />
+               </form>
+               <PerformAPICall inputData = {this.state}/>
+            </div>
          </div>
       );
    }
@@ -70,7 +87,7 @@ class InputComponents extends React.Component
 
 //// TODO: determine if a class or function is better because we aren't storing data
 // Create a class to find and store JSON data for potential restaurants
-class JSONData extends React.Component
+class PerformAPICall extends React.Component
 {
    constructor(props)
    {
@@ -80,28 +97,76 @@ class JSONData extends React.Component
       }
    }
 
-   componentDidMount()
-   {
-      //// TODO: move this into a URL creator that takes user input
-      var placeSearchURL = 'https://cors-anywhere-chance.herokuapp.com/https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 
-         'key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
-         '&location=29.632073906038194,-82.3305081265896&radius=2000' + 
-         '&type=restaurant&keyword=hispanic';
+   // componentDidUpdate()
+   // {
+   //    console.log(
+   //       'NewRadius: ' + this.props.inputData.radius + 
+   //       '\nNewKeywords: ' + this.props.inputData.keywords +
+   //       '\nNewOpenNow: ' + this.props.inputData.openNow      
+   //    );
+   // }
 
-      // TODO: move this into a function that updates the map when user confirms input
-      FetchPlaceSearchJSON(placeSearchURL).then((placeIDs) => {
+   //// TODO: perform error check on user input before allowing API call
+   errorCheckUserInput()
+   {
+      // Check if radius is a number
+
+      // Check if radius is a number between 0 and 60
+      this.runAPISearchhUsingUserInput();
+   }
+
+   async runAPISearchhUsingUserInput()
+   {
+      let userLatitude = 0;
+      let userLongitude = 0;
+      
+      await callGetUserPosition().then((position) => {
+         userLatitude = position.coords.latitude;
+         userLongitude = position.coords.longitude;
+         console.log('Lat: ' + userLatitude + '\nLong: ' + userLongitude);
+      })
+      .catch((err) => {
+         console.error(err.message);
+      })
+
+      // API call is in meters so convert miles to meters
+      const meterRadius = this.props.inputData.radius * 1609.34;
+
+      const placeSearchURL = //'https://cors-anywhere-chance.herokuapp.com/' + 
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 
+      'key=' + apiKey + 
+      '&location=' + userLatitude + ',' + userLongitude +
+      '&radius=' + meterRadius + 
+      '&type=restaurant' + 
+      '&keyword=' + this.props.inputData.keywords;
+
+      
+      console.log(
+         'Radius(miles, meters): ' + this.props.inputData.radius + ', ' + meterRadius + 
+         '\nKeywords: ' + this.props.inputData.keywords +
+         '\nOpenNow: ' + this.props.inputData.openNow      
+      );
+
+      console.log(placeSearchURL);
+
+      FetchPlaceSearchJSON(this.placeSearchURL).then((placeIDs) => {
          console.log('placeIDs = ' + placeIDs.length);
          this.setState({searchPlaceIDs: placeIDs});
+         //console.log(placeIDs[0]);
       })
       .catch(e => console.log(e));
    }
 
+   
+
+   //// TODO: create a button that will run the Fetch function when pressed
+   //    <ul id = 'placeID'>
+   //    {this.state.searchPlaceIDs.map(list => (<li key={list}>{list}</li>) )}
+   // </ul>
    render()
    {
       return(
-         <ul id = 'placeID'>
-            {this.state.searchPlaceIDs.map(list => (<li key={list}>{list}</li>) )}
-         </ul>
+         <button onClick={() => this.errorCheckUserInput()}>CHANCE!!!</button>
       );
    }
 }
@@ -138,59 +203,18 @@ function ParsePlaceSearchJSONForPlaceID(resultJson)
 }
 
 
-//// TODO: determine if a class or function is better because we aren't storing data
-// Store user location and inputs to use for API calls
-class UserData extends React.Component
-{
-   constructor(props)
-   {
-      super(props);
-      this.state = {
-         latitude: 0.0,
-         longitude: 0.0,
-         searchRange: 1000,
-         searchKeywords: '',
-      }
-   }
-
-   componentDidMount()
-   {
-      //// TODO: move this to user input and run when query made
-      GetUserPosition.then((position) => {
-         let locationData = [position.coords.latitude, position.coords.longitude];
-         console.log(locationData[0] + ', ' + locationData[1]);
-         this.setState({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-         })
-      })
-      .catch((err) => {
-         console.error(err.message);
-      })
-   }
-
-   render()
-   {
-      return(
-         <ul id = 'userData'>
-            <li>Latitude = {this.state.latitude}</li>
-            <li>Longitude = {this.state.longitude}</li>
-            <li>Range = {this.state.searchRange}</li>
-            <li>Keywords = {this.state.searchKeywords}</li>
-         </ul>
-      );
-   }
-}
-
-
 // Grab the current user location and return a Promise while processing
+   // In function so it does not grab location w/o user action
 // https://gist.github.com/varmais/74586ec1854fe288d393
 // Removed the options param from example as it was not needed
-let GetUserPosition = new Promise( (resolve, reject) => {
-   navigator.geolocation.getCurrentPosition(resolve, reject);
-});
+function callGetUserPosition()
+{
+   let GetUserPosition = new Promise( (resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+   });
 
-//// TODO: User this Maps demo to import and display a Google Map
+   return GetUserPosition;
+}
 
 //// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
