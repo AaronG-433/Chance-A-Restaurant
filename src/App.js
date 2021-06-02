@@ -12,11 +12,12 @@ function App()
             </p>
          </header>
          <div className = 'App-body'>
-            <InputComponents />
+         <InputComponents />
          </div>
       </div>
    );
 }
+
 
 
 class InputComponents extends React.Component
@@ -85,6 +86,7 @@ class InputComponents extends React.Component
    }
 }
 
+
 //// TODO: determine if a class or function is better because we aren't storing data
 // Create a class to find and store JSON data for potential restaurants
 class PerformAPICall extends React.Component
@@ -93,18 +95,9 @@ class PerformAPICall extends React.Component
    {
       super(props);
       this.state = {
-         searchPlaceIDs: [],
+         places: [],
       }
    }
-
-   // componentDidUpdate()
-   // {
-   //    console.log(
-   //       'NewRadius: ' + this.props.inputData.radius + 
-   //       '\nNewKeywords: ' + this.props.inputData.keywords +
-   //       '\nNewOpenNow: ' + this.props.inputData.openNow      
-   //    );
-   // }
 
    //// TODO: perform error check on user input before allowing API call
    errorCheckUserInput()
@@ -120,7 +113,7 @@ class PerformAPICall extends React.Component
       let userLatitude = 0;
       let userLongitude = 0;
       
-      await callGetUserPosition().then((position) => {
+      await CallGetUserPosition().then((position) => {
          userLatitude = position.coords.latitude;
          userLongitude = position.coords.longitude;
          console.log('Lat: ' + userLatitude + '\nLong: ' + userLongitude);
@@ -132,7 +125,7 @@ class PerformAPICall extends React.Component
       // API call is in meters so convert miles to meters
       const meterRadius = this.props.inputData.radius * 1609.34;
 
-      const placeSearchURL = //'https://cors-anywhere-chance.herokuapp.com/' + 
+      const placeSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 
       'key=' + apiKey + 
       '&location=' + userLatitude + ',' + userLongitude +
@@ -149,15 +142,13 @@ class PerformAPICall extends React.Component
 
       console.log(placeSearchURL);
 
-      FetchPlaceSearchJSON(this.placeSearchURL).then((placeIDs) => {
-         console.log('placeIDs = ' + placeIDs.length);
-         this.setState({searchPlaceIDs: placeIDs});
-         //console.log(placeIDs[0]);
+      FetchPlaceSearchJSON(placeSearchURL).then((places) => {
+         console.log('places = ' + places.length);
+         this.setState({places: places});
+         console.log(places);
       })
       .catch(e => console.log(e));
    }
-
-   
 
    //// TODO: create a button that will run the Fetch function when pressed
    //    <ul id = 'placeID'>
@@ -171,6 +162,18 @@ class PerformAPICall extends React.Component
    }
 }
 
+// Grab the current user location and return a Promise while processing
+   // In function so it does not grab location w/o user action
+// https://gist.github.com/varmais/74586ec1854fe288d393
+// Removed the options param from example as it was not needed
+function CallGetUserPosition()
+{
+   let GetUserPosition = new Promise( (resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+   });
+
+   return GetUserPosition;
+}
 
 async function FetchPlaceSearchJSON(placeSearchURL)
 {
@@ -186,14 +189,13 @@ async function FetchPlaceSearchJSON(placeSearchURL)
    resultJson = await myJson.results;
 
    //// TODO: Add a setting that removes any restaurants that are currently closed
-   resultJson = await resultJson.filter(place => place.opening_hours.open_now === true)
+   // resultJson = await resultJson.filter(place => place.opening_hours.open_now === true)
 
    //// TODO: determine if no need to parse JSON for only place_id
-   var placeIDs = await ParsePlaceSearchJSONForPlaceID(resultJson);
+   //var placeIDs = await ParsePlaceSearchJSONForPlaceID(resultJson);
 
-   return placeIDs;   
+   return resultJson;   
 }
-
 
 function ParsePlaceSearchJSONForPlaceID(resultJson)
 {
@@ -203,18 +205,6 @@ function ParsePlaceSearchJSONForPlaceID(resultJson)
 }
 
 
-// Grab the current user location and return a Promise while processing
-   // In function so it does not grab location w/o user action
-// https://gist.github.com/varmais/74586ec1854fe288d393
-// Removed the options param from example as it was not needed
-function callGetUserPosition()
-{
-   let GetUserPosition = new Promise( (resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject);
-   });
-
-   return GetUserPosition;
-}
 
 //// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
