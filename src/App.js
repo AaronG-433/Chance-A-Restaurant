@@ -19,7 +19,7 @@ function App()
 }
 
 
-
+// Create input components for the user to use
 class InputComponents extends React.Component
 {
    //// TODO: need a...
@@ -32,8 +32,9 @@ class InputComponents extends React.Component
       super(props);
       this.state = {
          radius: 5,
-         keywords: '',
-         openNow: true
+         keywords: 'hispanic',  //// TODO: remove this keyword; testing only
+         openNow: true,
+         location: ''            //// TODO: add changeable location
       };
 
       this.handleInputChange = this.handleInputChange.bind(this);
@@ -49,7 +50,6 @@ class InputComponents extends React.Component
       this.setState({ [name]: value });
    }
 
-   //// TODO: limit radius to only numbers between 0 - 100
    render()
    {
       return(
@@ -79,7 +79,7 @@ class InputComponents extends React.Component
                   </label>
                   <br />
                </form>
-               <PerformAPICall inputData = {this.state}/>
+               <PerformAPICall userInputData = {this.state}/>
             </div>
          </div>
       );
@@ -87,8 +87,7 @@ class InputComponents extends React.Component
 }
 
 
-//// TODO: determine if a class or function is better because we aren't storing data
-// Create a class to find and store JSON data for potential restaurants
+// Perform Google Maps Place Search API call when "CHANCE!!!" button is pressed
 class PerformAPICall extends React.Component
 {
    constructor(props)
@@ -123,7 +122,7 @@ class PerformAPICall extends React.Component
       })
 
       // API call is in meters so convert miles to meters
-      const meterRadius = this.props.inputData.radius * 1609.34;
+      const meterRadius = this.props.userInputData.radius * 1609.34;
 
       const placeSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?' + 
@@ -131,22 +130,20 @@ class PerformAPICall extends React.Component
       '&location=' + userLatitude + ',' + userLongitude +
       '&radius=' + meterRadius + 
       '&type=restaurant' + 
-      '&keyword=' + this.props.inputData.keywords;
+      '&keyword=' + this.props.userInputData.keywords;
 
-      
-      console.log(
-         'Radius(miles, meters): ' + this.props.inputData.radius + ', ' + meterRadius + 
-         '\nKeywords: ' + this.props.inputData.keywords +
-         '\nOpenNow: ' + this.props.inputData.openNow      
-      );
+      // FetchPlaceSearchJSON(placeSearchURL).then((places) => {
+      //    console.log('places = ' + places.length);
+      //    this.setState({places: places});
+      //    console.log(places);
+      // })
+      // .catch(e => console.log(e));
 
-      console.log(placeSearchURL);
-
-      FetchPlaceSearchJSON(placeSearchURL).then((places) => {
-         console.log('places = ' + places.length);
+      CheckIfResponseIsMoreThanOnePage(placeSearchURL).then(places => {
+         console.log('Places length: ' + places.length);
          this.setState({places: places});
-         console.log(places);
-      })
+         console.log('Places: ' + places);
+      })      
       .catch(e => console.log(e));
    }
 
@@ -157,7 +154,10 @@ class PerformAPICall extends React.Component
    render()
    {
       return(
-         <button onClick={() => this.errorCheckUserInput()}>CHANCE!!!</button>
+         <div>
+            <button onClick={() => this.errorCheckUserInput()}>CHANCE!!!</button>
+            <RandomlyChooseARestaurantAndDisplayData places = {this.state.places} />
+         </div>
       );
    }
 }
@@ -175,18 +175,63 @@ function CallGetUserPosition()
    return GetUserPosition;
 }
 
+
+async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
+{
+   let responseJson = [];
+   let returnPlaces = [];
+
+   // if next_page_token exists, perform another fetch and concatenate results
+   do 
+   {
+      let tempSearchURL = placeSearchURL;
+
+      // If next_page_token exists then load next page
+      if (responseJson.next_page_token)
+      {
+         tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
+         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
+         '&pagetoken=' + responseJson.next_page_token;
+      }
+
+      let response = [];
+      console.log('URL: ' + tempSearchURL);
+      await  FetchPlaceSearchJSON(tempSearchURL).then(resJson => {
+         console.log('ResJson: ' + resJson);
+         response = resJson;
+      })
+      .catch(e => console.log(e));
+
+      responseJson = response;
+
+      let places = await responseJson.results;
+
+      returnPlaces = returnPlaces.concat(places);
+
+      console.log('Inside length: ' + returnPlaces.length);
+      console.log('Inside Return places: ' + returnPlaces);
+
+      console.log('Next page: ' + responseJson.next_page_token);
+   } while (responseJson.next_page_token)
+
+   console.log('Return places: ' + returnPlaces);
+
+   return returnPlaces;
+}
+
 async function FetchPlaceSearchJSON(placeSearchURL)
 {
-   var resultJson = [];
-
    // Wait for fetch to finish and throw errors if any
    let response = await fetch(placeSearchURL);
    if (!response.ok)
       throw new Error('HTTP error! Status: ' + response.status);
 
    // Parse response to get list of different restaurants
-   let myJson = await response.json();
-   resultJson = await myJson.results;
+   let responseJson = await response.json();
+
+   //// TODO: check if response has a next_page_token and perform another fetch if so
+
+   //// TODO: check if returning entire response then parsing is better
 
    //// TODO: Add a setting that removes any restaurants that are currently closed
    // resultJson = await resultJson.filter(place => place.opening_hours.open_now === true)
@@ -194,16 +239,24 @@ async function FetchPlaceSearchJSON(placeSearchURL)
    //// TODO: determine if no need to parse JSON for only place_id
    //var placeIDs = await ParsePlaceSearchJSONForPlaceID(resultJson);
 
-   return resultJson;   
+   return responseJson;   
 }
 
-function ParsePlaceSearchJSONForPlaceID(resultJson)
+
+class RandomlyChooseARestaurantAndDisplayData extends React.Component
 {
-   var placeIDs = resultJson.map(place => place.place_id);
 
-   return placeIDs
+   render()
+   {
+      return(
+         <ul id = 'placeID'>
+            {this.props.places.length ? (this.props.places.map(place => (<li key={place.place_id}>{place.name}</li>) ))
+               : <li>Empty</li>
+            }
+         </ul>
+      );
+   }
 }
-
 
 
 //// TODO: Move the API key and other sensitive data into secure document
