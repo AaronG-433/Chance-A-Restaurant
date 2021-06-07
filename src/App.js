@@ -178,49 +178,101 @@ function CallGetUserPosition()
 
 async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 {
-   let responseJson = [];
+   let nextPageToken = '';
    let returnPlaces = [];
 
-   // if next_page_token exists, perform another fetch and concatenate results
-   do 
+   let tempSearchURL = placeSearchURL;
+
+   console.log('URL: ' + tempSearchURL);
+   await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
+      console.log('1st fetch: ' + data[0].length);
+      returnPlaces = data[0];
+      nextPageToken = data[1];
+   })
+   .catch(e => console.log(e));
+
+   console.log('1st Return places(' + returnPlaces.length + ')');
+
+   // If 2nd page exists then load next page
+   if (nextPageToken)
    {
-      let tempSearchURL = placeSearchURL;
+      tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey + 
+      '&pagetoken=' + nextPageToken;
 
-      // If next_page_token exists then load next page
-      if (responseJson.next_page_token)
-      {
-         tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
-         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
-         '&pagetoken=' + responseJson.next_page_token;
-      }
-
-      let response = [];
-      console.log('URL: ' + tempSearchURL);
-      await  FetchPlaceSearchJSON(tempSearchURL).then(resJson => {
-         console.log('ResJson: ' + resJson);
-         response = resJson;
+      console.log('2nd page URL: ' + tempSearchURL);
+      await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
+         console.log('2nd fetch: ' + data[0].length);
+         returnPlaces = returnPlaces.concat(data[0]);
+         nextPageToken = data[1];
       })
       .catch(e => console.log(e));
+   
+      console.log('2nd Return places(' + returnPlaces.length + ')');
+   }
+   
+   // If 3rd exists then load next page
+   if (nextPageToken)
+   {
+      tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey +
+      '&pagetoken=' + nextPageToken;
 
-      responseJson = response;
-
-      let places = await responseJson.results;
-
-      returnPlaces = returnPlaces.concat(places);
-
-      console.log('Inside length: ' + returnPlaces.length);
-      console.log('Inside Return places: ' + returnPlaces);
-
-      console.log('Next page: ' + responseJson.next_page_token);
-   } while (responseJson.next_page_token)
-
-   console.log('Return places: ' + returnPlaces);
+      console.log('3rd page URL: ' + tempSearchURL);
+      await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
+         console.log('3nd fetch: ' + data[0].length);
+         returnPlaces = returnPlaces.concat(data[0]);
+         nextPageToken = data[1];
+      })
+      .catch(e => console.log(e));  
+   
+      console.log('3nd Return places(' + returnPlaces.length + ')');
+   }
 
    return returnPlaces;
+
+   // Attemp using Do/While loop
+   // // if next_page_token exists, perform another fetch and concatenate results
+   // do 
+   // {
+   //    let tempSearchURL = placeSearchURL;
+
+   //    // If next_page_token exists then load next page
+   //    if (responseJson.next_page_token)
+   //    {
+   //       tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
+   //       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
+   //       '&pagetoken=' + responseJson.next_page_token;
+   //    }
+
+   //    let response = [];
+   //    console.log('URL: ' + tempSearchURL);
+   //    await  FetchPlaceSearchJSON(tempSearchURL).then(resJson => {
+   //       console.log('ResJson: ' + resJson);
+   //       response = resJson;
+   //    })
+   //    .catch(e => console.log(e));
+
+   //    responseJson = response;
+
+   //    let places = await responseJson.results;
+
+   //    returnPlaces = returnPlaces.concat(responseJson.results);
+
+   //    console.log('Inside length: ' + returnPlaces.length);
+   //    console.log('Inside Return places: ' + returnPlaces);
+
+   //    console.log('Next page: ' + responseJson.next_page_token);
+   // } while (responseJson.next_page_token)
+
+   // console.log('Outside return places: ' + returnPlaces);
+
+   // return returnPlaces;
 }
 
 async function FetchPlaceSearchJSON(placeSearchURL)
 {
+   console.log('Fetch URL: ' + placeSearchURL);
    // Wait for fetch to finish and throw errors if any
    let response = await fetch(placeSearchURL);
    if (!response.ok)
@@ -228,6 +280,12 @@ async function FetchPlaceSearchJSON(placeSearchURL)
 
    // Parse response to get list of different restaurants
    let responseJson = await response.json();
+
+   let places = await responseJson.results;
+
+   let nextPageToken = await responseJson.next_page_token;
+
+   console.log('Token = ' + nextPageToken);
 
    //// TODO: check if response has a next_page_token and perform another fetch if so
 
@@ -239,7 +297,7 @@ async function FetchPlaceSearchJSON(placeSearchURL)
    //// TODO: determine if no need to parse JSON for only place_id
    //var placeIDs = await ParsePlaceSearchJSONForPlaceID(resultJson);
 
-   return responseJson;   
+   return [places, nextPageToken];   
 }
 
 
