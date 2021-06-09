@@ -132,25 +132,18 @@ class PerformAPICall extends React.Component
       '&type=restaurant' + 
       '&keyword=' + this.props.userInputData.keywords;
 
-      // FetchPlaceSearchJSON(placeSearchURL).then((places) => {
-      //    console.log('places = ' + places.length);
-      //    this.setState({places: places});
-      //    console.log(places);
-      // })
-      // .catch(e => console.log(e));
-
-      CheckIfResponseIsMoreThanOnePage(placeSearchURL).then(places => {
-         console.log('Places length: ' + places.length);
-         this.setState({places: places});
-         console.log('Places: ' + places);
-      })      
+      await CheckIfResponseIsMoreThanOnePage(placeSearchURL)
+      .then(places => Delay(places, 10000)
+         .then(places => {
+            console.log('Returned places = ' + places);
+            console.log('Places length: ' + places.length);
+            this.setState({places: places});
+            console.log('Places: ' + places);
+         })
+      )
       .catch(e => console.log(e));
    }
 
-   //// TODO: create a button that will run the Fetch function when pressed
-   //    <ul id = 'placeID'>
-   //    {this.state.searchPlaceIDs.map(list => (<li key={list}>{list}</li>) )}
-   // </ul>
    render()
    {
       return(
@@ -176,6 +169,13 @@ function CallGetUserPosition()
 }
 
 
+// Return a promise for places after timeout has elapsed
+// https://stackoverflow.com/questions/33843091/how-do-you-wrap-settimeout-in-a-promise/33843314
+function Delay(places, ms)
+{
+   return new Promise(resolve => setTimeout( () => resolve(places), ms));
+}
+
 async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 {
    let nextPageToken = '';
@@ -184,7 +184,7 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
    let tempSearchURL = placeSearchURL;
 
    console.log('URL: ' + tempSearchURL);
-   await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
+   await  FetchPlaceSearchJSON(tempSearchURL, 0).then( data => {
       console.log('1st fetch: ' + data[0].length);
       returnPlaces = data[0];
       nextPageToken = data[1];
@@ -193,84 +193,52 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 
    console.log('1st Return places(' + returnPlaces.length + ')');
 
-   // If 2nd page exists then load next page
-   if (nextPageToken)
-   {
-      tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
-      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey + 
-      '&pagetoken=' + nextPageToken;
 
-      console.log('2nd page URL: ' + tempSearchURL);
-      await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
-         console.log('2nd fetch: ' + data[0].length);
-         returnPlaces = returnPlaces.concat(data[0]);
-         nextPageToken = data[1];
-      })
-      .catch(e => console.log(e));
-   
-      console.log('2nd Return places(' + returnPlaces.length + ')');
-   }
-   
-   // If 3rd exists then load next page
-   if (nextPageToken)
-   {
-      tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
-      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey +
-      '&pagetoken=' + nextPageToken;
+   //// TODO: move timeouts to functions for next_page_token then make them return promises
 
-      console.log('3rd page URL: ' + tempSearchURL);
-      await  FetchPlaceSearchJSON(tempSearchURL).then( data => {
-         console.log('3nd fetch: ' + data[0].length);
-         returnPlaces = returnPlaces.concat(data[0]);
-         nextPageToken = data[1];
-      })
-      .catch(e => console.log(e));  
-   
-      console.log('3nd Return places(' + returnPlaces.length + ')');
-   }
+   // Use setTimeouts to delay fetch so next_page_token can be made available by Google
+   setTimeout( async () => {
+      // If 2nd page exists then load next page
+      if (nextPageToken)
+      {
+         tempSearchURL = placeSearchURL +
+         '&pagetoken=' + nextPageToken;
 
-   return returnPlaces;
+         console.log('2nd page URL: ' + tempSearchURL);
+         await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
+            console.log('2nd fetch: ' + data[0].length);
+            returnPlaces = returnPlaces.concat(data[0]);
+            nextPageToken = data[1];
+         })
+         .catch(e => console.log(e));
+      
+         console.log('2nd Return places(' + returnPlaces.length + ')');
+      }
+      
+      setTimeout( async () => {
+         // If 3rd exists then load next page
+         if (nextPageToken)
+         {
+            tempSearchURL = placeSearchURL +
+            '&pagetoken=' + nextPageToken;
 
-   // Attemp using Do/While loop
-   // // if next_page_token exists, perform another fetch and concatenate results
-   // do 
-   // {
-   //    let tempSearchURL = placeSearchURL;
+            console.log('3rd page URL: ' + tempSearchURL);
+            await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
+               console.log('3rd fetch: ' + data[0].length);
+               returnPlaces = returnPlaces.concat(data[0]);
+               nextPageToken = data[1];
+            })
+            .catch(e => console.log(e));  
+         
+            console.log('3rd Return places(' + returnPlaces.length + ')');
+         }
 
-   //    // If next_page_token exists then load next page
-   //    if (responseJson.next_page_token)
-   //    {
-   //       tempSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
-   //       'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI' + 
-   //       '&pagetoken=' + responseJson.next_page_token;
-   //    }
-
-   //    let response = [];
-   //    console.log('URL: ' + tempSearchURL);
-   //    await  FetchPlaceSearchJSON(tempSearchURL).then(resJson => {
-   //       console.log('ResJson: ' + resJson);
-   //       response = resJson;
-   //    })
-   //    .catch(e => console.log(e));
-
-   //    responseJson = response;
-
-   //    let places = await responseJson.results;
-
-   //    returnPlaces = returnPlaces.concat(responseJson.results);
-
-   //    console.log('Inside length: ' + returnPlaces.length);
-   //    console.log('Inside Return places: ' + returnPlaces);
-
-   //    console.log('Next page: ' + responseJson.next_page_token);
-   // } while (responseJson.next_page_token)
-
-   // console.log('Outside return places: ' + returnPlaces);
-
-   // return returnPlaces;
+         return returnPlaces;
+      }, 3000);
+   }, 3000);
 }
 
-async function FetchPlaceSearchJSON(placeSearchURL)
+async function FetchPlaceSearchJSON(placeSearchURL, delayTime)
 {
    console.log('Fetch URL: ' + placeSearchURL);
    // Wait for fetch to finish and throw errors if any
@@ -278,12 +246,18 @@ async function FetchPlaceSearchJSON(placeSearchURL)
    if (!response.ok)
       throw new Error('HTTP error! Status: ' + response.status);
 
+   console.log('Response status: ' + response.status);
+
    // Parse response to get list of different restaurants
    let responseJson = await response.json();
+
 
    let places = await responseJson.results;
 
    let nextPageToken = await responseJson.next_page_token;
+
+   if (!nextPageToken)
+      console.log('No page token');
 
    console.log('Token = ' + nextPageToken);
 
@@ -299,6 +273,7 @@ async function FetchPlaceSearchJSON(placeSearchURL)
 
    return [places, nextPageToken];   
 }
+
 
 
 class RandomlyChooseARestaurantAndDisplayData extends React.Component
