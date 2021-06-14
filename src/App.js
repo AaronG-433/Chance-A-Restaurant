@@ -1,6 +1,6 @@
 import './App.css';
 import React from 'react';
-import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
+//import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
 
 function App()
 {
@@ -34,7 +34,7 @@ class InputComponents extends React.Component
          radius: 5,
          keywords: 'hispanic',  //// TODO: remove this keyword; testing only
          openNow: true,
-         location: ''            //// TODO: add changeable location
+         location: ''            //// TODO: add changeable location (address conversion?)
       };
 
       this.handleInputChange = this.handleInputChange.bind(this);
@@ -134,21 +134,9 @@ class PerformAPICall extends React.Component
 
       await CheckIfResponseIsMoreThanOnePage(placeSearchURL)
       .then(places => {
-         console.log('Returned places = ' + places);
-         console.log('Places length: ' + places.length);
+         console.log('Complete places length: ' + places.length);
          this.setState({places: places});
-         console.log('Places: ' + places);
       })
-      // .then(async places => {
-      //    return Delay(places, 10000)
-      //    .then(places => {
-      //          console.log('Returned places = ' + places);
-      //          console.log('Places length: ' + places.length);
-      //          this.setState({places: places});
-      //          console.log('Places: ' + places);
-      //       })
-      //    }
-      // );
    }
 
    render()
@@ -176,12 +164,6 @@ function CallGetUserPosition()
 }
 
 
-// Return a promise for places after timeout has elapsed
-// https://stackoverflow.com/questions/33843091/how-do-you-wrap-settimeout-in-a-promise/33843314
-function Delay(data , ms)
-{
-   return new Promise(resolve => setTimeout( () => resolve(data), ms));
-}
 
 async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 {
@@ -190,67 +172,61 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 
    let tempSearchURL = placeSearchURL;
 
-   console.log('URL: ' + tempSearchURL);
+   // Fetch the first page of data
    await  FetchPlaceSearchJSON(tempSearchURL, 0).then( data => {
       console.log('1st fetch: ' + data[0].length);
       returnPlaces = data[0];
+      console.log('1st Return places(' + returnPlaces.length + ')');
       nextPageToken = data[1];
    })
-   .then(() => Delay(null, 3000))
+   .then(() => Delay(2000))   // Give time for Google to create next page
    .then(async () => {
-      // If 2nd page exists then load next page
+
+      // If 2nd page exists then fetch next page
       if (nextPageToken)
       {
          tempSearchURL = placeSearchURL +
          '&pagetoken=' + nextPageToken;
 
-         console.log('2nd page URL: ' + tempSearchURL);
-         await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
+         await FetchPlaceSearchJSON(tempSearchURL).then( data => {
             console.log('2nd fetch: ' + data[0].length);
             returnPlaces = returnPlaces.concat(data[0]);
+            console.log('2nd Return places(' + returnPlaces.length + ')');
             nextPageToken = data[1];
          })
-         .then(() => Delay(null, 3000))
+         .then(() => Delay(2000))   // Give time for Google to create next page
          .then( async () => {
-            // If 3rd page exists then load next page
+
+            // If 3rd page exists then fetch next page
             if (nextPageToken)
             {
                tempSearchURL = placeSearchURL +
                '&pagetoken=' + nextPageToken;
 
-               console.log('3rd page URL: ' + tempSearchURL);
-               await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
+               await FetchPlaceSearchJSON(tempSearchURL).then( data => {
                   console.log('3rd fetch: ' + data[0].length);
                   returnPlaces = returnPlaces.concat(data[0]);
+                  console.log('3rd Return places(' + returnPlaces.length + ')');
                   nextPageToken = data[1];
                })
                .catch(e => console.log(e));  
-            
-               console.log('3rd Return places(' + returnPlaces.length + ')');
             }
          })
          .catch(e => console.log(e));
-      
-         console.log('2nd Return places(' + returnPlaces.length + ')');
       }
    })
    .catch(e => console.log(e));
-
-   console.log('1st Return places(' + returnPlaces.length + ')');
 
    return returnPlaces;
 }
 
 //// TODO: try to move 3 sec timeouts into this function
-async function FetchPlaceSearchJSON(placeSearchURL, delayTime)
+async function FetchPlaceSearchJSON(placeSearchURL)
 {
-   console.log('Fetch URL: ' + placeSearchURL);
    // Wait for fetch to finish and throw errors if any
    let response = await fetch(placeSearchURL);
    if (!response.ok)
       throw new Error('HTTP error! Status: ' + response.status);
-
-   console.log('Response status: ' + response.status);
 
    // Parse response to get list of different restaurants
    let responseJson = await response.json();
@@ -260,24 +236,19 @@ async function FetchPlaceSearchJSON(placeSearchURL, delayTime)
 
    let nextPageToken = await responseJson.next_page_token;
 
-   if (!nextPageToken)
-      console.log('No page token');
-
-   console.log('Token = ' + nextPageToken);
-
-   //// TODO: check if response has a next_page_token and perform another fetch if so
-
-   //// TODO: check if returning entire response then parsing is better
-
    //// TODO: Add a setting that removes any restaurants that are currently closed
    // resultJson = await resultJson.filter(place => place.opening_hours.open_now === true)
-
-   //// TODO: determine if no need to parse JSON for only place_id
-   //var placeIDs = await ParsePlaceSearchJSONForPlaceID(resultJson);
 
    return [places, nextPageToken];   
 }
 
+
+// Return a promise for places after timeout has elapsed
+// https://stackoverflow.com/questions/33843091/how-do-you-wrap-settimeout-in-a-promise/33843314
+function Delay(ms)
+{
+   return new Promise(resolve => setTimeout( () => resolve(), ms));
+}
 
 
 class RandomlyChooseARestaurantAndDisplayData extends React.Component
@@ -298,6 +269,27 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       }
    }
 
+   //// TODO: 
+   randomlyChooseARestaurant()
+   {
+
+   }
+
+   //// TODO: 
+   displayRestaurantData()
+   {
+      // Display restaurant name
+
+      // Picture
+
+      // Rating
+
+      // Price
+
+      // Location (with external link to Google Maps)
+
+   }
+
 
    render()
    {
@@ -315,37 +307,37 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 //// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
 
-//https://www.pluralsight.com/guides/how-to-use-geolocation-call-in-reactjs
-class SimpleMap extends React.Component
-{
-   constructor()
-   {
-      super();
-      this.state = {name: 'React'};
-   }
+// //https://www.pluralsight.com/guides/how-to-use-geolocation-call-in-reactjs
+// class SimpleMap extends React.Component
+// {
+//    constructor()
+//    {
+//       super();
+//       this.state = {name: 'React'};
+//    }
 
-   render()
-   {
-      return(
-         <div>
-            <Map
-               google = {this.props.google}
-               zoom={14}
-               style={{height: '100%', width: '100%'}}
-               initialCenter={{
-                  lat: 23.456,
-                  lng: -82.33
-               }}
-            >
-               <Marker
-                  onClick = {this.onMarkerClick}
-                  name = {'My Marker'}
-               />
-            </Map>
-         </div>
-      );
-   }
-}
+//    render()
+//    {
+//       return(
+//          <div>
+//             <Map
+//                google = {this.props.google}
+//                zoom={14}
+//                style={{height: '100%', width: '100%'}}
+//                initialCenter={{
+//                   lat: 23.456,
+//                   lng: -82.33
+//                }}
+//             >
+//                <Marker
+//                   onClick = {this.onMarkerClick}
+//                   name = {'My Marker'}
+//                />
+//             </Map>
+//          </div>
+//       );
+//    }
+// }
 
 //// TEMP
 export default App;
