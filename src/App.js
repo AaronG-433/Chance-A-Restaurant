@@ -133,15 +133,22 @@ class PerformAPICall extends React.Component
       '&keyword=' + this.props.userInputData.keywords;
 
       await CheckIfResponseIsMoreThanOnePage(placeSearchURL)
-      .then(places => Delay(places, 10000)
-         .then(places => {
-            console.log('Returned places = ' + places);
-            console.log('Places length: ' + places.length);
-            this.setState({places: places});
-            console.log('Places: ' + places);
-         })
-      )
-      .catch(e => console.log(e));
+      .then(places => {
+         console.log('Returned places = ' + places);
+         console.log('Places length: ' + places.length);
+         this.setState({places: places});
+         console.log('Places: ' + places);
+      })
+      // .then(async places => {
+      //    return Delay(places, 10000)
+      //    .then(places => {
+      //          console.log('Returned places = ' + places);
+      //          console.log('Places length: ' + places.length);
+      //          this.setState({places: places});
+      //          console.log('Places: ' + places);
+      //       })
+      //    }
+      // );
    }
 
    render()
@@ -171,9 +178,9 @@ function CallGetUserPosition()
 
 // Return a promise for places after timeout has elapsed
 // https://stackoverflow.com/questions/33843091/how-do-you-wrap-settimeout-in-a-promise/33843314
-function Delay(places, ms)
+function Delay(data , ms)
 {
-   return new Promise(resolve => setTimeout( () => resolve(places), ms));
+   return new Promise(resolve => setTimeout( () => resolve(data), ms));
 }
 
 async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
@@ -189,15 +196,8 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
       returnPlaces = data[0];
       nextPageToken = data[1];
    })
-   .catch(e => console.log(e));
-
-   console.log('1st Return places(' + returnPlaces.length + ')');
-
-
-   //// TODO: move timeouts to functions for next_page_token then make them return promises
-
-   // Use setTimeouts to delay fetch so next_page_token can be made available by Google
-   setTimeout( async () => {
+   .then(() => Delay(null, 3000))
+   .then(async () => {
       // If 2nd page exists then load next page
       if (nextPageToken)
       {
@@ -210,34 +210,38 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
             returnPlaces = returnPlaces.concat(data[0]);
             nextPageToken = data[1];
          })
+         .then(() => Delay(null, 3000))
+         .then( async () => {
+            // If 3rd page exists then load next page
+            if (nextPageToken)
+            {
+               tempSearchURL = placeSearchURL +
+               '&pagetoken=' + nextPageToken;
+
+               console.log('3rd page URL: ' + tempSearchURL);
+               await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
+                  console.log('3rd fetch: ' + data[0].length);
+                  returnPlaces = returnPlaces.concat(data[0]);
+                  nextPageToken = data[1];
+               })
+               .catch(e => console.log(e));  
+            
+               console.log('3rd Return places(' + returnPlaces.length + ')');
+            }
+         })
          .catch(e => console.log(e));
       
          console.log('2nd Return places(' + returnPlaces.length + ')');
       }
-      
-      setTimeout( async () => {
-         // If 3rd exists then load next page
-         if (nextPageToken)
-         {
-            tempSearchURL = placeSearchURL +
-            '&pagetoken=' + nextPageToken;
+   })
+   .catch(e => console.log(e));
 
-            console.log('3rd page URL: ' + tempSearchURL);
-            await FetchPlaceSearchJSON(tempSearchURL, 3000).then( data => {
-               console.log('3rd fetch: ' + data[0].length);
-               returnPlaces = returnPlaces.concat(data[0]);
-               nextPageToken = data[1];
-            })
-            .catch(e => console.log(e));  
-         
-            console.log('3rd Return places(' + returnPlaces.length + ')');
-         }
+   console.log('1st Return places(' + returnPlaces.length + ')');
 
-         return returnPlaces;
-      }, 3000);
-   }, 3000);
+   return returnPlaces;
 }
 
+//// TODO: try to move 3 sec timeouts into this function
 async function FetchPlaceSearchJSON(placeSearchURL, delayTime)
 {
    console.log('Fetch URL: ' + placeSearchURL);
@@ -278,12 +282,28 @@ async function FetchPlaceSearchJSON(placeSearchURL, delayTime)
 
 class RandomlyChooseARestaurantAndDisplayData extends React.Component
 {
+   constructor(props)
+   {
+      super(props);
+      this.state = {
+         places: []
+      };
+   }
+
+   componentDidUpdate(prevProps)
+   {
+      if(prevProps.places !== this.props.places)
+      {
+         this.setState({places: this.props.places});
+      }
+   }
+
 
    render()
    {
       return(
          <ul id = 'placeID'>
-            {this.props.places.length ? (this.props.places.map(place => (<li key={place.place_id}>{place.name}</li>) ))
+            {this.state.places.length ? (this.state.places.map(place => (<li key={place.place_id}>{place.name}</li>) ))
                : <li>Empty</li>
             }
          </ul>
