@@ -1,6 +1,5 @@
 import './App.css';
 import React from 'react';
-//import {Map, GoogleApiWrapper, Marker} from 'google-maps-react';
 
 function App()
 {
@@ -23,8 +22,6 @@ function App()
 class InputComponents extends React.Component
 {
    //// TODO: need a...
-      // input box for range in miles (convert to meters using math)
-      // input box for keywords (with example)
       // checkbox for 'Remove closed stores'
       // 
    constructor(props)
@@ -32,9 +29,9 @@ class InputComponents extends React.Component
       super(props);
       this.state = {
          radius: 5,
-         keywords: 'hispanic',  //// TODO: remove this keyword; testing only
+         keywords: '',
          openNow: true,
-         location: ''            //// TODO: add changeable location (address conversion?)
+         location: ''      //// TODO: add changeable location (address conversion?)
       };
 
       this.handleInputChange = this.handleInputChange.bind(this);
@@ -115,7 +112,6 @@ class PerformAPICall extends React.Component
       await CallGetUserPosition().then((position) => {
          userLatitude = position.coords.latitude;
          userLongitude = position.coords.longitude;
-         console.log('Lat: ' + userLatitude + '\nLong: ' + userLongitude);
       })
       .catch((err) => {
          console.error(err.message);
@@ -132,11 +128,10 @@ class PerformAPICall extends React.Component
       '&type=restaurant' + 
       '&keyword=' + this.props.userInputData.keywords;
 
+      console.log('URL = ' + placeSearchURL);
+
       await CheckIfResponseIsMoreThanOnePage(placeSearchURL)
-      .then(places => {
-         console.log('Complete places length: ' + places.length);
-         this.setState({places: places});
-      })
+      .then(places => { this.setState({places: places}); })
    }
 
    render()
@@ -149,6 +144,7 @@ class PerformAPICall extends React.Component
       );
    }
 }
+
 
 // Grab the current user location and return a Promise while processing
    // In function so it does not grab location w/o user action
@@ -164,7 +160,6 @@ function CallGetUserPosition()
 }
 
 
-
 async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 {
    let nextPageToken = '';
@@ -172,11 +167,9 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
 
    let tempSearchURL = placeSearchURL;
 
-   // Fetch the first page of data
+   // Fetch the 1st page of data
    await  FetchPlaceSearchJSON(tempSearchURL, 0).then( data => {
-      console.log('1st fetch: ' + data[0].length);
       returnPlaces = data[0];
-      console.log('1st Return places(' + returnPlaces.length + ')');
       nextPageToken = data[1];
    })
    .then(() => Delay(2000))   // Give time for Google to create next page
@@ -189,9 +182,7 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
          '&pagetoken=' + nextPageToken;
 
          await FetchPlaceSearchJSON(tempSearchURL).then( data => {
-            console.log('2nd fetch: ' + data[0].length);
             returnPlaces = returnPlaces.concat(data[0]);
-            console.log('2nd Return places(' + returnPlaces.length + ')');
             nextPageToken = data[1];
          })
          .then(() => Delay(2000))   // Give time for Google to create next page
@@ -204,9 +195,7 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
                '&pagetoken=' + nextPageToken;
 
                await FetchPlaceSearchJSON(tempSearchURL).then( data => {
-                  console.log('3rd fetch: ' + data[0].length);
                   returnPlaces = returnPlaces.concat(data[0]);
-                  console.log('3rd Return places(' + returnPlaces.length + ')');
                   nextPageToken = data[1];
                })
                .catch(e => console.log(e));  
@@ -220,7 +209,7 @@ async function CheckIfResponseIsMoreThanOnePage(placeSearchURL)
    return returnPlaces;
 }
 
-//// TODO: try to move 3 sec timeouts into this function
+
 async function FetchPlaceSearchJSON(placeSearchURL)
 {
    // Wait for fetch to finish and throw errors if any
@@ -257,91 +246,60 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
    {
       super(props);
       this.state = {
-         places: []
+         randomPlace: []
       };
    }
 
    componentDidUpdate(prevProps)
    {
+      // Randomly choose a place and save it
       if(prevProps.places !== this.props.places)
       {
-         this.setState({places: this.props.places});
+         const max = this.props.places.length;
+         const rand =  Math.floor(Math.random() * max);
+         console.log('Max = ' + max);
+         console.log('Random = ' + rand);
+         this.setState({randomPlace: this.props.places[rand]});
+
+         console.log(this.props.places[rand]);
       }
    }
-
-   //// TODO: 
-   randomlyChooseARestaurant()
-   {
-
-   }
-
-   //// TODO: 
-   displayRestaurantData()
-   {
-      // Display restaurant name
-
-      // Picture
-
-      // Rating
-
-      // Price
-
-      // Location (with external link to Google Maps)
-
-   }
-
 
    render()
    {
       return(
-         <ul id = 'placeID'>
-            {this.state.places.length ? (this.state.places.map(place => (<li key={place.place_id}>{place.name}</li>) ))
-               : <li>Empty</li>
+         <div id = 'placeID'>
+            {this.state.randomPlace.name ? displayRestaurantData(this.state.randomPlace)
+               : <h1>Empty</h1>
             }
-         </ul>
+         </div>
       );
    }
+}
+
+function displayRestaurantData(randomPlace)
+{
+   console.log('Place name = ' + randomPlace.name);
+
+   // Display restaurant data ***Note: no price b/c often not available***
+   const restName = <li>{randomPlace.name}</li>;
+   const restPicture = <li>Insert Picture</li>;    //// TODO: add img
+   const restRating = <li>{randomPlace.rating}</li>
+   const restLocation = <li>{randomPlace.vicinity}</li>;
+
+   return (
+      <ul>
+         {restName}
+         {restPicture}
+         {restRating}
+         {restLocation}
+      </ul>
+   )
+
 }
 
 
 //// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
 
-// //https://www.pluralsight.com/guides/how-to-use-geolocation-call-in-reactjs
-// class SimpleMap extends React.Component
-// {
-//    constructor()
-//    {
-//       super();
-//       this.state = {name: 'React'};
-//    }
-
-//    render()
-//    {
-//       return(
-//          <div>
-//             <Map
-//                google = {this.props.google}
-//                zoom={14}
-//                style={{height: '100%', width: '100%'}}
-//                initialCenter={{
-//                   lat: 23.456,
-//                   lng: -82.33
-//                }}
-//             >
-//                <Marker
-//                   onClick = {this.onMarkerClick}
-//                   name = {'My Marker'}
-//                />
-//             </Map>
-//          </div>
-//       );
-//    }
-// }
-
-//// TEMP
 export default App;
-
-// export default GoogleApiWrapper({
-//    apiKey: apiKey
-// })(SimpleMap);
