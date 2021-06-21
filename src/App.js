@@ -102,6 +102,7 @@ class PerformAPICall extends React.Component
    errorCheckUserInput()
    {
       // Check if radius is a number
+      console.log('openNow = ' + this.props.userInputData.openNow);
 
       // Check if radius is a number between 0 and 60
       this.runAPISearchhUsingUserInput();
@@ -257,20 +258,6 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       };
    }
 
-
-   removeDuplicateAndClosedRestaurants(places)
-   {
-      let filteredPlaces = places;
-
-      //// TODO: Remove duplicate restaurants starting with farthest from user
-
-
-      //// TODO: Remove closed restaurants
-
-
-      return filteredPlaces;
-   }
-
    componentDidUpdate(prevProps)
    {
       // Randomly choose a place and save it
@@ -285,6 +272,22 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 
          console.log(filteredPlaces[rand]);
       }
+   }
+
+
+   removeDuplicateAndClosedRestaurants(places)
+   {
+      // Remove duplicate restaurants
+      let filteredPlaces = Array.from( new Set( places.map(place => place.name)))
+         .map(name => {
+            return places.find(place => place.name === name)
+         })
+
+
+      //// TODO: Remove closed restaurants if openNow = checked
+
+
+      return filteredPlaces;
    }
 
    
