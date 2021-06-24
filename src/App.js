@@ -102,7 +102,7 @@ class PerformAPICall extends React.Component
    errorCheckUserInput()
    {
       // Check if radius is a number
-      console.log('openNow = ' + this.props.userInputData.openNow);
+      console.log('openNow = ' + this.props.userInputData.openNow);  //// TEST
 
       // Check if radius is a number between 0 and 60
       this.runAPISearchhUsingUserInput();
@@ -133,7 +133,7 @@ class PerformAPICall extends React.Component
       '&type=restaurant' + 
       '&keyword=' + this.props.userInputData.keywords;
 
-      console.log('URL = ' + placeSearchURL);
+      console.log('URL = ' + placeSearchURL);  //// TEST
 
       await this.checkIfResponseIsMoreThanOnePage(placeSearchURL)
       .then(places => { this.setState({places: places}); })
@@ -254,32 +254,33 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
    {
       super(props);
       this.state = {
-         randomPlace: []
+         randomPlace: [],
+         remainingPlaces: []
       };
    }
 
    componentDidUpdate(prevProps)
    {
-      // Randomly choose a place and save it
       if(prevProps.places !== this.props.places)
       {
-         const filteredPlaces = this.removeDuplicateAndClosedRestaurants(this.props.places);
-         const max = filteredPlaces.length;
-         const rand =  Math.floor(Math.random() * max);
-         console.log('Max = ' + max);
-         console.log('Random = ' + rand);
-         this.setState({randomPlace: filteredPlaces[rand]});
+         // Filter out duplicate restaurants
+         let filteredPlaces = this.removeDuplicateAndClosedRestaurants(this.props.places);
 
-         console.log(filteredPlaces[rand]);
+         console.log("Initial length = " + filteredPlaces.length);  //// TEST
+
+         // Randomly choose a restuarant and remove it from list
+         this.randomlyPickRestaurantFromPlacesAndSetState(filteredPlaces);
       }
    }
 
 
    removeDuplicateAndClosedRestaurants(places)
    {
-      // Remove duplicate restaurants
-      let filteredPlaces = Array.from( new Set( places.map(place => place.name)))
+      // Remove duplicate restaurants by creating new Set that only allows unique entries
+      // https://dev.to/marinamosti/removing-duplicates-in-an-array-of-objects-in-js-with-sets-3fep
+      let filteredPlaces = Array.from( new Set( places.map( place => place.name)))
          .map(name => {
+            // Return original JSON object if name in unique Set
             return places.find(place => place.name === name)
          })
 
@@ -290,26 +291,22 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       return filteredPlaces;
    }
 
-   
-   displayRestaurantData(randomPlace)
+
+   async randomlyPickRestaurantFromPlacesAndSetState(tempPlaces)
    {
-      console.log('Place name = ' + randomPlace.name);
+      //// TODO: Add a check for size of places and do something if length = 0
 
-      // Display restaurant data ***Note: no price b/c often not available***
-      const restName = <li>{randomPlace.name}</li>;
-      const restPicture = <li>Insert Picture</li>;    //// TODO: add img
-      const restRating = <li>{randomPlace.rating}</li>
-      const restLocation = <li>{randomPlace.vicinity}</li>;
+      // Randomly pick new place
+      const max = tempPlaces.length;
+      const rand =  Math.floor(Math.random() * max);
+      const randPlace = tempPlaces[rand];
 
-      return (
-         <ul>
-            {restName}
-            {restPicture}
-            {restRating}
-            {restLocation}
-         </ul>
-      )
 
+      // Remove place from remaining places and save
+      await tempPlaces.splice(rand, 1);
+      this.setState({randomPlace: randPlace, remainingPlaces: tempPlaces});
+
+      console.log('New length = ' + tempPlaces.length);  //// TEST
    }
 
    render()
@@ -321,6 +318,37 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
             }
          </div>
       );
+   }
+
+   
+   displayRestaurantData(randomPlace)
+   {
+      console.log('Place name = ' + randomPlace.name);  //// TEST
+
+      // Display restaurant data ***Note: no price b/c often not available***
+      const restName = <li>{randomPlace.name}</li>;
+      const restPicture = <li>Insert Picture</li>;    //// TODO: add img
+      const restRating = <li>{randomPlace.rating}</li>
+      const restLocation = <li>{randomPlace.vicinity}</li>;
+
+
+      //// TODO: add "ReChance" button that picks restaurant from current list
+      const retryButton = <button onClick={() => 
+         this.randomlyPickRestaurantFromPlacesAndSetState(this.state.remainingPlaces)}
+         >
+         Chance Again?
+      </button>
+
+      return (
+         <ul>
+            {restName}
+            {restPicture}
+            {restRating}
+            {restLocation}
+            {retryButton}
+         </ul>
+      )
+
    }
 }
 
