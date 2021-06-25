@@ -73,7 +73,7 @@ class InputComponents extends React.Component
                   <label>
                      Show only open restaurants:
                      <input name='openNow' type='checkbox'
-                        value={this.state.openNow} checked='checked' onChange={this.handleInputChange}/>
+                        value={this.state.openNow} checked={this.state.openNow} onChange={this.handleInputChange}/>
                   </label>
                   <br />
                </form>
@@ -102,7 +102,6 @@ class PerformAPICall extends React.Component
    errorCheckUserInput()
    {
       // Check if radius is a number
-      console.log('openNow = ' + this.props.userInputData.openNow);  //// TEST
 
       // Check if radius is a number between 0 and 60
       this.runAPISearchhUsingUserInput();
@@ -122,7 +121,7 @@ class PerformAPICall extends React.Component
          console.error(err.message);
       })
 
-      // API call is in meters so convert miles to meters
+      // API call is in meters so convert miles to meters and create URL
       const meterRadius = this.props.userInputData.radius * 1609.34;
 
       const placeSearchURL = 'https://cors-anywhere-chance.herokuapp.com/' + 
@@ -266,10 +265,8 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
          // Filter out duplicate restaurants
          let filteredPlaces = this.removeDuplicateAndClosedRestaurants(this.props.places);
 
-         console.log("Initial length = " + filteredPlaces.length);  //// TEST
-
          // Randomly choose a restuarant and remove it from list
-         this.randomlyPickRestaurantFromPlacesAndSetState(filteredPlaces);
+         this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(filteredPlaces);
       }
    }
 
@@ -286,15 +283,26 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 
 
       //// TODO: Remove closed restaurants if openNow = checked
+      if (this.props.openNow)
+      {
+         console.log("We open bois");
+      }
 
 
       return filteredPlaces;
    }
 
 
-   async randomlyPickRestaurantFromPlacesAndSetState(tempPlaces)
+   async randomlyPickRestaurantFromPlacesThenUpdateRemaining(tempPlaces)
    {
-      //// TODO: Add a check for size of places and do something if length = 0
+      // If no remaining places, reset randomPlace and prompt user to "CHANCE!!!" again
+      if (tempPlaces.length === 0)
+      {
+
+         this.setState({randomPlace: []});
+
+         return;
+      }
 
       // Randomly pick new place
       const max = tempPlaces.length;
@@ -305,8 +313,6 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       // Remove place from remaining places and save
       await tempPlaces.splice(rand, 1);
       this.setState({randomPlace: randPlace, remainingPlaces: tempPlaces});
-
-      console.log('New length = ' + tempPlaces.length);  //// TEST
    }
 
    render()
@@ -314,7 +320,7 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       return(
          <div id = 'placeID'>
             {this.state.randomPlace.name ? this.displayRestaurantData(this.state.randomPlace)
-               : <h1>Empty</h1>
+               : <h1>Time to chance it!</h1>
             }
          </div>
       );
@@ -323,9 +329,8 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
    
    displayRestaurantData(randomPlace)
    {
-      console.log('Place name = ' + randomPlace.name);  //// TEST
-
       // Display restaurant data ***Note: no price b/c often not available***
+      const numOfRemainingPlaces = <li>Remaining places: {this.state.remainingPlaces.length}</li>
       const restName = <li>{randomPlace.name}</li>;
       const restPicture = <li>Insert Picture</li>;    //// TODO: add img
       const restRating = <li>{randomPlace.rating}</li>
@@ -334,7 +339,7 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 
       //// TODO: add "ReChance" button that picks restaurant from current list
       const retryButton = <button onClick={() => 
-         this.randomlyPickRestaurantFromPlacesAndSetState(this.state.remainingPlaces)}
+         this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(this.state.remainingPlaces)}
          >
          Chance Again?
       </button>
@@ -345,16 +350,13 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
             {restPicture}
             {restRating}
             {restLocation}
+            {numOfRemainingPlaces}
             {retryButton}
          </ul>
       )
 
    }
 }
-
-
-
-
 
 //// TODO: Move the API key and other sensitive data into secure document
 const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
