@@ -1,3 +1,19 @@
+/*************************
+Author: Aaron M Gaskin
+Purpose: Randomly pick a restuarant based on user criteria because
+   my friends are super indecisive and I WANNA EAT!!!!
+
+How it works: Use the react front-end library to fetch from the
+   Google Maps Places API based on user location and input. Then,
+   parse data, randomly pick a restaurant, and finally display 
+   restaurant data to the user.
+
+Languages: React front-end with JSX, HTML, and CSS mixed in
+
+Note: only used App.js and App.css so far as this is mainly a 
+   front-end project. Might create user accounts later.
+*************************/
+
 import './App.css';
 import React from 'react';
 
