@@ -11,7 +11,8 @@ How it works: Use the react front-end library to fetch from the
 Languages: React front-end with JSX, HTML, and CSS mixed in
 
 Note: only used App.js and App.css so far as this is mainly a 
-   front-end project. Might create user accounts later.
+   front-end project. Might create user accounts later and incorporate
+   backend.
 *************************/
 
 import './App.css';
@@ -348,12 +349,33 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       // Display restaurant data ***Note: no price b/c often not available***
       const numOfRemainingPlaces = <li>Remaining places: {this.state.remainingPlaces.length}</li>
       const restName = <li>{randomPlace.name}</li>;
-      const restPicture = <li>Insert Picture</li>;    //// TODO: add img
+
+      const photoInfo = randomPlace.photos[0];
+      const photoURL = 'https://maps.googleapis.com/maps/api/place/photo?maxheight=400' + 
+      '&key=' + apiKey + 
+      '&photoreference=' + photoInfo.photo_reference;
+      const photoSource = photoInfo.html_attributions;   //// TEST
+
+      // Create HTML elements to display all the restaurant data
+      let restPhoto;
+      if (photoSource)
+      {
+         restPhoto = <li>
+            <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
+            <div>Photo Source: &nbsp;<span dangerouslySetInnerHTML={{__html: photoSource}} /></div>
+         </li>;
+      }
+      else
+      {
+         restPhoto = <li>
+            <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
+         </li>; 
+      }
       const restRating = <li>{randomPlace.rating}</li>
       const restLocation = <li>{randomPlace.vicinity}</li>;
 
 
-      //// TODO: add "ReChance" button that picks restaurant from current list
+      // Add a 'Retry' button that picks a new restaurant from remaining places
       const retryButton = <button onClick={() => 
          this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(this.state.remainingPlaces)}
          >
@@ -363,14 +385,13 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       return (
          <ul>
             {restName}
-            {restPicture}
+            {restPhoto}
             {restRating}
             {restLocation}
             {numOfRemainingPlaces}
             {retryButton}
          </ul>
       )
-
    }
 }
 
