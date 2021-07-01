@@ -28,7 +28,9 @@ function App()
             </p>
          </header>
          <div className = 'App-body'>
-         <InputComponents />
+            <div id='wrapper'>
+               <InputComponents />
+            </div>
          </div>
       </div>
    );
@@ -68,10 +70,10 @@ class InputComponents extends React.Component
    render()
    {
       return(
-         <div>
+         <React.Fragment>
             <div className = 'Input-Components'>
                <form>
-                  <label>
+                  <label id='input-distance'>
                      Search radius in miles:
                      <input name='radius' type='text' placeholder='Ex: 5'
                         value={this.state.radius} onChange={this.handleInputChange}
@@ -79,7 +81,7 @@ class InputComponents extends React.Component
                   </label>
                   <br />
 
-                  <label>
+                  <label id='input-keywords'>
                      Restaurant type:
                      <input name='keywords' type='text' placeholder='Ex: hispanic'
                         value={this.state.keywords} onChange={this.handleInputChange}
@@ -87,16 +89,16 @@ class InputComponents extends React.Component
                   </label>
                   <br />
 
-                  <label>
+                  <label id='input-openNow'>
                      Show only open restaurants:
                      <input name='openNow' type='checkbox'
                         value={this.state.openNow} checked={this.state.openNow} onChange={this.handleInputChange}/>
                   </label>
                   <br />
                </form>
-               <PerformAPICall userInputData = {this.state}/>
             </div>
-         </div>
+            <PerformAPICall userInputData = {this.state}/>
+         </React.Fragment>
       );
    }
 }
@@ -251,13 +253,17 @@ class PerformAPICall extends React.Component
    render()
    {
       return(
-         <div>
-            <button onClick={() => this.errorCheckUserInput()}>CHANCE!!!</button>
-            <RandomlyChooseARestaurantAndDisplayData
-               places = {this.state.places} 
-               openNow = {this.props.userInputData.openNow}
-            />
-         </div>
+         <React.Fragment>
+            <button id='button-chance' onClick={() => this.errorCheckUserInput()}>
+               CHANCE!!!
+            </button>
+            <div className = 'Restaurant-Data'>
+               <RandomlyChooseARestaurantAndDisplayData
+                  places = {this.state.places} 
+                  openNow = {this.props.userInputData.openNow}
+               />
+            </div>
+         </React.Fragment>
       );
    }
 }
@@ -315,9 +321,7 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       // If no remaining places, reset randomPlace and prompt user to "CHANCE!!!" again
       if (tempPlaces.length === 0)
       {
-
          this.setState({randomPlace: []});
-
          return;
       }
 
@@ -335,62 +339,69 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
    render()
    {
       return(
-         <div id = 'placeID'>
+         <React.Fragment>
             {this.state.randomPlace.name ? this.displayRestaurantData(this.state.randomPlace)
                : <h1>Time to chance it!</h1>
             }
-         </div>
+         </React.Fragment>
       );
    }
 
    
    displayRestaurantData(randomPlace)
    {
-      // Display restaurant data ***Note: no price b/c often not available***
-      const numOfRemainingPlaces = <li>Remaining places: {this.state.remainingPlaces.length}</li>
-      const restName = <li>{randomPlace.name}</li>;
+      // Display name ***Note: no price b/c often not available***
+      const restName = <div id='restaurant-name'>{randomPlace.name}</div>;
 
+      // Display photo and source if it exists
       const photoInfo = randomPlace.photos[0];
-      const photoURL = 'https://maps.googleapis.com/maps/api/place/photo?maxheight=400' + 
+      const photoURL = 'https://maps.googleapis.com/maps/api/place/photo?maxheight=200' + 
       '&key=' + apiKey + 
       '&photoreference=' + photoInfo.photo_reference;
       const photoSource = photoInfo.html_attributions;   //// TEST
 
-      // Create HTML elements to display all the restaurant data
       let restPhoto;
       if (photoSource)
       {
-         restPhoto = <li>
+         restPhoto = <div id='restaurant-photo'>
             <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
-            <div>Photo Source: &nbsp;<span dangerouslySetInnerHTML={{__html: photoSource}} /></div>
-         </li>;
+            <div id='restaurant-photo-source'>Photo Source: &nbsp;
+               <span dangerouslySetInnerHTML={{__html: photoSource}} />
+            </div>
+         </div>;
       }
       else
       {
-         restPhoto = <li>
+         restPhoto = <div id='restaurant-photo'>
             <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
-         </li>; 
+         </div>; 
       }
-      const restRating = <li>{randomPlace.rating}</li>
-      const restLocation = <li>{randomPlace.vicinity}</li>;
 
+      // Display rating and location
+      const restRating = <div id='restaurant-rating'>Rating: &nbsp;{randomPlace.rating}</div>;
+      const restLocation = <div id='restaurant-location'>{randomPlace.vicinity}</div>;
 
+      // Display number of remaining restaurants that were returned by the API search
+      const numOfRemainingPlaces = <div id='remaining-places'>
+         Remaining places: {this.state.remainingPlaces.length}
+      </div>;
+      
       // Add a 'Retry' button that picks a new restaurant from remaining places
-      const retryButton = <button onClick={() => 
+      const retryButton = <button id='button-retry' onClick={() => 
          this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(this.state.remainingPlaces)}
          >
          Chance Again?
       </button>
 
       return (
-         <ul>
+         <React.Fragment>
             {restName}
             {restPhoto}
             {restRating}
             {restLocation}
             {numOfRemainingPlaces}
             {retryButton}
-         </ul>
+         </React.Fragment>
       )
    }
 }
