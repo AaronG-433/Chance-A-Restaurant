@@ -47,27 +47,35 @@ html, body, #root {
 
 .App-body {
    text-align: center;
+   /* Image source: https://www.123rf.com/photo_42171497_stock-vector-cartoon-fast-food-seamless-background-.html */
    background-image: url('./food_background.jpg');
    background-size: 100% 100%;
    background-repeat: no-repeat;
    height: 90%;
-   padding-top: 10%;
    padding-left: 10%;
    padding-right: 10%;
-   padding-bottom: 10%;
    box-sizing: border-box;
    overflow: auto;
 }
 
+#wrapper-height-padding {
+   height: 90%;
+   top: 5%;
+   position: relative;
+}
+
 #wrapper {
    vertical-align: middle;
+   /* Image source: https://thumbnail.imgbin.com/5/8/6/imgbin-knife-napkin-fork-plate-free-dinner-q8BiWFKmeL85JYThWHmLe7JYk_t.jpg */
    background-image: url('./dinner_plate_background.jpg');
    background-size: 100% 100%;
    height: 100%;
    border-style: solid;
    border-color: black;
    box-sizing: border-box;
-   padding: 5%;
+   padding-left: 5%;
+   padding-right: 5%;
+   padding-top: 5px;
    overflow: auto;
 }
 

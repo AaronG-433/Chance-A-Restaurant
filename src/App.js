@@ -28,8 +28,10 @@ function App()
             </p>
          </header>
          <div className = 'App-body'>
-            <div id='wrapper'>
-               <InputComponents />
+            <div id='wrapper-height-padding'>
+               <div id='wrapper'>
+                  <InputComponents />
+               </div>
             </div>
          </div>
       </div>
@@ -277,7 +279,8 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       super(props);
       this.state = {
          randomPlace: [],
-         remainingPlaces: []
+         remainingPlaces: [],
+         chanceAgain: true
       };
    }
 
@@ -288,7 +291,7 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
          // Filter out duplicate restaurants
          let filteredPlaces = this.removeDuplicateAndClosedRestaurants(this.props.places);
 
-         // Randomly choose a restuarant and remove it from list
+         // Randomly choose a restuarant to display and then remove it from list
          this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(filteredPlaces);
       }
    }
@@ -318,12 +321,6 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 
    async randomlyPickRestaurantFromPlacesThenUpdateRemaining(tempPlaces)
    {
-      // If no remaining places, reset randomPlace and prompt user to "CHANCE!!!" again
-      if (tempPlaces.length === 0)
-      {
-         this.setState({randomPlace: []});
-         return;
-      }
 
       // Randomly pick new place
       const max = tempPlaces.length;
@@ -334,6 +331,15 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       // Remove place from remaining places and save
       await tempPlaces.splice(rand, 1);
       this.setState({randomPlace: randPlace, remainingPlaces: tempPlaces});
+
+      // If no remaining places, remove 'Chance Again?' button
+         // and prompt user to "CHANCE!!!" again
+      if (tempPlaces.length === 0)
+      {
+            ////TODO: leave current restaurant displayed but remove "Chance Again?" button
+         this.setState({chanceAgain: false});
+         return;
+      }
    }
 
    render()
@@ -341,7 +347,7 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       return(
          <React.Fragment>
             {this.state.randomPlace.name ? this.displayRestaurantData(this.state.randomPlace)
-               : <h1>Time to chance it!</h1>
+               : <h2>Time to 'CHANCE!!!' it!</h2>
             }
          </React.Fragment>
       );
@@ -360,38 +366,45 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
       '&photoreference=' + photoInfo.photo_reference;
       const photoSource = photoInfo.html_attributions;   //// TEST
 
-      let restPhoto;
-      if (photoSource)
+      let restPhoto = null;
+      if (photoURL)  // Check if photo exists
       {
-         restPhoto = <div id='restaurant-photo'>
-            <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
-            <div id='restaurant-photo-source'>Photo Source: &nbsp;
-               <span dangerouslySetInnerHTML={{__html: photoSource}} />
-            </div>
-         </div>;
-      }
-      else
-      {
-         restPhoto = <div id='restaurant-photo'>
-            <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
-         </div>; 
+         // Now check if photo source exists
+         if (photoSource)  // If yes, include photo and source, else...
+         {
+            restPhoto = <div id='restaurant-photo'>
+               <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
+               <div id='restaurant-photo-source'>Photo Source: &nbsp;
+                  <span dangerouslySetInnerHTML={{__html: photoSource}} />
+               </div>
+            </div>;
+         }
+         else  // ...just include photo
+         {
+            restPhoto = <div id='restaurant-photo'>
+               <img src={photoURL} alt="Food from chosen restaurant or chosen restaurant" />
+            </div>; 
+         }
       }
 
-      // Display rating and location
-      const restRating = <div id='restaurant-rating'>Rating: &nbsp;{randomPlace.rating}</div>;
-      const restLocation = <div id='restaurant-location'>{randomPlace.vicinity}</div>;
+      // Display rating and location, if they exist
+      const restRating = (randomPlace.rating ? 
+         <div id='restaurant-rating'>Rating: &nbsp;{randomPlace.rating}</div> : null);
+      const restLocation = (randomPlace.vicinity ? 
+         <div id='restaurant-location'>{randomPlace.vicinity}</div> : null);
 
       // Display number of remaining restaurants that were returned by the API search
-      const numOfRemainingPlaces = <div id='remaining-places'>
-         Remaining places: {this.state.remainingPlaces.length}
-      </div>;
+      const numOfRemainingPlaces = (this.state.remainingPlaces.length !== 0 ? 
+      <div id='remaining-places'>
+         Remaining places: {this.state.remainingPlaces.length} </div> :
+      <div>No remaining places. <br/>Please select 'CHANCE!!!' to load more.</div>);
       
       // Add a 'Retry' button that picks a new restaurant from remaining places
-      const retryButton = <button id='button-retry' onClick={() => 
+      const retryButton = (this.state.chanceAgain ? <button id='button-retry' onClick={() => 
          this.randomlyPickRestaurantFromPlacesThenUpdateRemaining(this.state.remainingPlaces)}
          >
          Chance Again?
-      </button>
+      </button> : null);
 
       return (
          <React.Fragment>
