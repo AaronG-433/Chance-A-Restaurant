@@ -6,7 +6,7 @@
 .pnp.js
 
 # vulnerable files
-./src/api_key.js
+/src/api_key.js
 
 # testing
 /coverage
