@@ -16,10 +16,7 @@ https://developers.google.com/maps/documentation/javascript/get-api-key
 For restricting the API key, you can limit it to Maps JS API and Places API key (although leaving it unrestricted should work fine).
 
 Now that you have your API key, you need to create a file called 'api_key.js' inside the 'src' folder. Inside this file, copy this code:
-`<
-   const apiKey = 'insertYourKeyHere';
-   module.exports = apiKey;
->`
+`<const apiKey = 'insertYourKeyHere'; module.exports = apiKey;>`
 
 
 # React supplied notes
