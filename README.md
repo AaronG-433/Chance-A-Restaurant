@@ -13,6 +13,16 @@ In order to prevent misuse of my API key, it will NOT be included in this repo a
 Instead, I will be providing instructions on how to make your own key and where to store it (for those wanting to build upon this).
 And for those wanting to use the app without the additional steps, I still need to research how to create a useable version that doesn't have the potential for abuse.
 
+# Creating your own API key and adding it to this app
+Follow this link to create your own Google Maps API key.
+https://developers.google.com/maps/documentation/javascript/get-api-key
+For restricting the API key, you can limit it to Maps JS API and Places API key (although leaving it unrestricted should work fine).
+Now that you have your API key, you need to create a file called 'api_key.js' inside the 'src' folder. Inside this folder, copy this code:
+`
+   const apiKey = <insert your key here>;
+   module.exports = apiKey;
+`
+
 
 # React supplied notes
 ## npm start

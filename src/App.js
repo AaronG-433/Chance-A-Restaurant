@@ -16,6 +16,7 @@ Note: only used App.js and App.css so far as this is mainly a
 *************************/
 
 import './App.css';
+import {apiKey} from './api_key.js';
 import React from 'react';
 
 function App()
@@ -420,6 +421,6 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
 }
 
 //// TODO: Move the API key and other sensitive data into secure document
-const apiKey = 'AIzaSyDBH1Do7uRmfF54CvPVpZhbka7v4xTaCfI';
+
 
 export default App;
