@@ -1,4 +1,4 @@
-### Chance A Restaurant
+### `Chance A Restaurant`
 # Notes and Purpose
 This app was developed using React.js and was my first attempt at designing and building an app.
 I originally came up with the idea for this app during a round table discussion of what to eat for dinner with my friends. We tend to take a while to pick so I asked my friends and it was decided that if I made an app to randomly pick restaurants, we would use it to speed up the process and get some FOOD!!!
@@ -15,7 +15,7 @@ And for those wanting to use the app without the additional steps, I still need 
 
 
 ### React supplied notes
-## `npm start`
+## npm start
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
@@ -23,12 +23,12 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
-## `npm test`
+## npm test
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## `npm run build`
+## npm run build
 
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
