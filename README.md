@@ -1,20 +1,20 @@
-### `Chance A Restaurant`
-# Notes and Purpose
+# `Chance A Restaurant`
+## Notes and Purpose
 This app was developed using React.js and was my first attempt at designing and building an app.
 I originally came up with the idea for this app during a round table discussion of what to eat for dinner with my friends. We tend to take a while to pick so I asked my friends and it was decided that if I made an app to randomly pick restaurants, we would use it to speed up the process and get some FOOD!!!
 
-# How it works
+## How it works
 Using the react library, I use an premade API key to make a call to the Google Maps API (specifically the Places API).
 After waiting for a response, I parse the data, randomly pick a restaurant, and display it for the user.
 From there, the user can choose to keep the displayed restaurant or randomly load a new one from the remaining choices.
 
-# Important notes
+## Important notes
 In order to prevent misuse of my API key, it will NOT be included in this repo as it is public.
 Instead, I will be providing instructions on how to make your own key and where to store it (for those wanting to build upon this).
 And for those wanting to use the app without the additional steps, I still need to research how to create a useable version that doesn't have the potential for abuse.
 
 
-### React supplied notes
+# React supplied notes
 ## npm start
 
 Runs the app in the development mode.\
