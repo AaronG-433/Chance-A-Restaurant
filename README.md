@@ -19,7 +19,7 @@ For restricting the API key, you can limit it to Maps JS API and Places API key 
 Now that you have your API key, you need to create a file called 'api_key.js' inside the 'src' folder. Inside this file, copy this code:
 ```
 const apiKey = 'insertYourKeyHere';
-module.exports = apiKey;
+module.exports = {apiKey};
 ```
 
 
