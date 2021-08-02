@@ -1,4 +1,7 @@
 # Chance A Restaurant
+### What this app does
+This app takes in distance from the user and desired type of food (Ex: chinese, tacos, cheap, etc.) and randomly picks then returns a restaurant that fits this criteria.
+
 ### Backstory
 This app was developed using React.js and was my first attempt at designing and building an app.  
 I originally came up with the idea for this app during a round table discussion of what to eat for dinner with my friends. We tend to take a while to pick so I asked my friends and it was decided that if I made an app to randomly pick restaurants, we would use it to speed up the process and get some FOOD!!!
@@ -10,7 +13,7 @@ I used the react library to build my app and a premade Google Maps API key (spec
 In order to prevent misuse of my API key, it will NOT be included in this repository as it is public. Instead, I will be providing instructions on how to make your own key and where to store it (for those wanting to build upon this).  
 And for those wanting to use the app without the additional steps, I still need to research how to create an easy-to-use version that doesn't have the potential for abuse so I aplogize but you'll need to create your own key as well.
 
-## Creating your own API key and adding it to this app
+#### Creating your own API key and adding it to this app
 Follow this link to create your own Google Maps API key.
 https://developers.google.com/maps/documentation/javascript/get-api-key
 
@@ -21,6 +24,9 @@ Now that you have your API key, you need to create a file called 'api_key.js' in
 const apiKey = 'insertYourKeyHere';
 module.exports = {apiKey};
 ```
+
+### App restrictions
+The Google API key returns, at most, the 60 closest restaurants that fit the criteria so if the user inputs a large distance, then not all restaurants in that area could be chosen. In addition, the initial search on the app takes approximately 4-8 seconds because the 60 restaurants are split over 3 web pages that are generated upon the request being sent so I had to manually delay the app in order to give Google time to process and create these pages.
 
 
 ## React supplied notes
