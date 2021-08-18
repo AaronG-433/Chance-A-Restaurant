@@ -29,6 +29,9 @@ module.exports = {apiKey};
 The Google API key returns, at most, the 60 closest restaurants that fit the criteria so if the user inputs a large distance, then not all restaurants in that area could be chosen. In addition, the initial search on the app takes approximately 4-8 seconds because the 60 restaurants are split over 3 web pages that are generated upon the request being sent so I had to manually delay the app in order to give Google time to process and create these pages.
 
 
+### Dependencies
+My app uses the built in React functions as well as a user made loading icon (https://www.npmjs.com/package/react-loader-spinner) that is displayed while the user waits for the information to be displayed.
+
 ## React supplied notes
 ### `npm start`
 

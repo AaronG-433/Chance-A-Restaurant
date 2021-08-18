@@ -10,14 +10,19 @@ How it works: Use the react front-end library to fetch from the
 
 Languages: React front-end with JSX, HTML, and CSS mixed in
 
-Note: only used App.js and App.css so far as this is mainly a 
+Note:
+   - only used App.js and App.css so far as this is mainly a 
    front-end project. Might create user accounts later and incorporate
    backend.
+   - Cannot remove all closed restaurants as this info is not stored for all places so I
+      removed the choice to do so
 *************************/
 
 import './App.css';
 import {apiKey} from './api_key.js';
 import React from 'react';
+import Loader from "react-loader-spinner";
+import { ConsoleWriter } from 'istanbul-lib-report';
 
 function App()
 {
@@ -53,7 +58,6 @@ class InputComponents extends React.Component
       this.state = {
          radius: 5,
          keywords: '',
-         openNow: true,
          location: ''      //// TODO: add changeable location (address conversion?)
       };
 
@@ -89,13 +93,6 @@ class InputComponents extends React.Component
                      <input name='keywords' type='text' placeholder='Ex: hispanic'
                         value={this.state.keywords} onChange={this.handleInputChange}
                      />
-                  </label>
-                  <br />
-
-                  <label id='input-openNow'>
-                     Show only open restaurants:
-                     <input name='openNow' type='checkbox'
-                        value={this.state.openNow} checked={this.state.openNow} onChange={this.handleInputChange}/>
                   </label>
                   <br />
                </form>
@@ -233,13 +230,9 @@ class PerformAPICall extends React.Component
       // Parse response to get list of different restaurants
       let responseJson = await response.json();
 
-
       let places = await responseJson.results;
 
       let nextPageToken = await responseJson.next_page_token;
-
-      //// TODO: Add a setting that removes any restaurants that are currently closed
-      // resultJson = await resultJson.filter(place => place.opening_hours.open_now === true)
 
       return [places, nextPageToken];   
    }
@@ -262,8 +255,7 @@ class PerformAPICall extends React.Component
             </button>
             <div className = 'Restaurant-Data'>
                <RandomlyChooseARestaurantAndDisplayData
-                  places = {this.state.places} 
-                  openNow = {this.props.userInputData.openNow}
+                  places = {this.state.places}
                />
             </div>
          </React.Fragment>
@@ -307,14 +299,6 @@ class RandomlyChooseARestaurantAndDisplayData extends React.Component
             // Return original JSON object if name in unique Set
             return places.find(place => place.name === name)
          })
-
-
-      //// TODO: Remove closed restaurants if openNow = checked
-      if (this.props.openNow)
-      {
-         console.log("We open bois");
-      }
-
 
       return filteredPlaces;
    }
